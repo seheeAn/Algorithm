@@ -1,58 +1,45 @@
 N, M = map(int, input().split())
-people = [0 for _ in range(N+1)]
-tmp = list(map(int,input().split()))
+truth = list(map(int,input().split()))[1:]
+party = []
+parent = [i for i in range(N+1)]
+
+for _ in range(M):
+    tmp = list(map(int,input().split()))[1:]
+    party.append(tmp)
+
+def find(x, parent): #부모 찾기
+    if x != parent[x]:
+        parent[x] = find(parent[x], parent)
+
+    return parent[x]
+
+def union(x, y, parent):
+    x = find(x,parent)
+    y = find(y,parent)
+
+    # 작은 쪽 부모로 통합
+    if x < y:
+        parent[y] = x
+    else:
+        parent[x] = y
+
+for i in truth: #turth 끼리 통합 > 작은쪽으로 통합되므로 진실을 알면 부모가 0이되도록 함
+    parent[i] = 0
+
+for i in range(M): #파티를 돌면서 그룹 통합.
+    first = party[i][0]
+    for person in party[i]:
+        if find(first, parent) != find(person, parent):
+            union(first, person, parent)
+
 res = 0
 
-for i in range(tmp[0]):
-    people[tmp[i+1]] = 1 #진실을 알면 1
-
-def dfs(party_idx, people_li, lie_cnt):
-    global res
-
-    if party_idx == M:
-        res = max(lie_cnt, res) #최댓값 갱신
-        return 
+for p in party:
+    for x in p:
+        if find(x, parent) == 0: #truth 그룹과 만나면 
+            break
     
-    participants = arr[party_idx]
-    know_lie = False
-    know_truth = False
-    new_people_li = people_li.copy()
-
-    for idx in participants:
-        if people_li[idx] == 1:
-            know_truth = True
-        if people_li[idx] == -1:
-            know_lie = True
-
-    if know_lie and know_truth: #모순발생 > 해당 루트 제거
-        return
-
-    elif know_lie: #거짓말만 알 때 
-        for idx in participants:
-            new_people_li[idx] = -1
-        dfs(party_idx+1, new_people_li, lie_cnt+1)
-    
-    elif know_truth: #진실만 알 때 
-        for idx in participants:
-            new_people_li[idx] = 1
-        dfs(party_idx+1, new_people_li, lie_cnt)
-    
-    else: #둘다 모를때
-        for idx in participants:
-            new_people_li[idx] = 1 #진실 말하기
-        dfs(party_idx+1, new_people_li, lie_cnt)
-
-        new_people_li = people_li.copy()
-        
-        for idx in participants:
-            new_people_li[idx] = -1 #거짓 말하기
-        dfs(party_idx+1, new_people_li, lie_cnt+1)
-
-arr = []
-for i in range(M):
-    tmp = list(map(int, input().split()))
-    arr.append(tmp[1:])
-            
-dfs(0, people, 0)
+    else: #해당 파티에 tuth 그룹이 없으면
+        res += 1
 
 print(res)
