@@ -1,37 +1,33 @@
 import heapq
-
+MAXNUM = 100000
 N = int(input()) #도시개수
 M = int(input()) #버스개수
-buses = [list(map(int, input().split())) for _ in range(M)]
-#출발도시, 도착도시, 버스비용
 
-cities = [[100000 for _ in range(N+1)] for _ in range(N+1)]
-visit = [0 for _ in range(N+1)]
+#메모리 초과로 인접리스트 사용 > 해도 메모리 초과;;;
+#해당 지점까지의 현재 cost를 저장하고 이것보다 cost가 작을 경우에만 que에 추가 >> 이것도 메모리초과 
+cities = [[] for _ in range(N+1)]
+costs = [MAXNUM for _ in range(N+1)]
 
-for bus in buses:
-    cities[bus[0]][bus[1]] = min(bus[2], cities[bus[0]][bus[1]])
+for i in range(M):
+    a, b, c = map(int, input().split())
+    cities[a].append([b,c]) #도착지, 비용
 
 start, end = map(int, input().split())
 
+#초기값
 que = []
-res = 0 #max 값
-
-#초기화
-for i in range(1, N+1):
-    heapq.heappush(que, (cities[start][i], i))#비용, 도착지 (비용을 기준으로 min heap)
-
+heapq.heappush(que, (0, start))
+costs[start] = 0
 
 while(que):
     cost, city = heapq.heappop(que)
-    visit[city] = 1
-
-    if city == end:
-        res = cost
-        break
+    if costs[city] < cost:
+        continue # 밑을 수행하지 않고 다음 iter로 넘어감
     
-    else:
-        for i in range(1, N+1):
-            if visit[i] == 0: #방문한 적 없으면
-                heapq.heappush(que, (cost + cities[city][i], i))
+    for c in cities[city]:
+        next_cost = cost + c[1]
+        if next_cost <= costs[c[0]]: #방문한 적 없고, 지금까지 저장된 cost보다 작다면
+            heapq.heappush(que, (next_cost, c[0]))
+            costs[c[0]] = next_cost #힙에 들어갈 때 갱신
 
-print(res)
+print(costs[end])
