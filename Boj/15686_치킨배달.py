@@ -16,12 +16,15 @@ res = 100000
 def dfs(idx, cnt):
     global res
     if cnt == M:
-        scores = [1000 for _ in range(len(houses))]
-        for m in range(M):
-            for i in range(len(houses)):
-                dist = abs(houses[i][0]-new_stores[m][0]) + abs(houses[i][1] - new_stores[m][1])
-                scores[i] = min(scores[i], dist)
-        res = min(sum(scores), res)
+        score = 0
+        for h in range(len(houses)):
+            chick = 1000
+            for m in range(M):
+                dist = abs(houses[h][0]-new_stores[m][0]) + abs(houses[h][1] - new_stores[m][1])
+                chick = min(chick , dist)
+            score += chick
+
+        res = min(score, res)
         return
 
     else:
