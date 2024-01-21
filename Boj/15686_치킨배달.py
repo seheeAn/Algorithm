@@ -28,7 +28,7 @@ def dfs(idx, cnt):
         return
 
     else:
-        for i in range(len(stores)):
+        for i in range(idx, len(stores)):
             new_stores.append(stores[i])
             dfs(i+1, cnt+1)
             new_stores.pop()
