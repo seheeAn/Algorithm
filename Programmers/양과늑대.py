@@ -1,52 +1,46 @@
-# 트리의 level 별로 search를 한다.
-# bfs 이용 0->1,8 ->2,4,7,9 -> 3,6,10,11
-# 총 늑대 수가 적은 노드부터 search 한다
-# 0 -> 1 -> 8 -> 7 -> 9 -> 4 ->  이상황에서부터 어케하지...?
-# 임시 늑대 수를 저장해 놨다가 양을 만나면 더하기...?
-# 0 -> 1 -> 8(1) -> 7 -> 9 -> 2(1) -> 4(1) -> 3(2) -> 6(2) -> 10(1) ->11(1) -> 5
-
-import heapq
+# 양방향 간선으로 간주하여 완전 탐색을 진행한다.
+# 중복 방문이 가능하다 
+# -> visit 배열을 3차원으로 만들어 같은 양, 늑대수로 해당 노드를 방문한 적이 있는 지 체크한다.
+# 만약 해당 경로 끝까지 갔는데 늑대가 많아질 경우 root로 되돌아 와야됨 -> dfs로 탐색
 
 def solution(info, edges):
     answer = 0
-    tree = [[] for _ in range(len(info))]
-    _tree = [[] for _ in range(len(info))]
+    tree = [[0 for _ in range(len(info))] for _ in range(len(info))]
+    visit = [[[0 for _ in range(len(info)+1)] for _ in range(len(info)+1)] for _ in range(len(info)+1)] # [늑대][양][노드]
     for e in edges:
-        tree[e[0]].append(e[1])
-        _tree[e[1]].append(e[0])
+        tree[e[1]][e[0]] = 1
+        tree[e[0]][e[1]] = 1
+                
+    def dfs(start, sheep, wolf):
+        nonlocal answer
+        answer = max(answer, sheep)
         
-    wolfs = 0
-    wolfs_li = []
-    que = []
-    heapq.heappush(que, (0, 0)) #늑대 수, 노드
-    
-    while que:
-        w_cnt, node = heapq.heappop(que)
-        
-        if info[node] == 0: #양이면
-            wolfs += w_cnt
-            w_cnt = 0
-            answer += 1
-        
-            check_root_wolf = [node]
-            while check_root_wolf:
-                n = check_root_wolf.pop(0)
-                for idx in _tree[n]:
-                    if info[idx] == 1:
-                        check_root_wolf.append(idx)
-                        if idx not in wolfs_li:
-                            wolfs_li.append(idx)
-                        else:
-                            wolfs -= 1
-            # print(wolfs, node, answer)     
-            if answer <= wolfs+1 and node!=0:
-                answer -= 1
-                break
-        
-        for n_node in tree[node]:
-            if info[n_node] == 1:
-                heapq.heappush(que, (w_cnt+1, n_node))
-            else:
-                heapq.heappush(que, (w_cnt, n_node))
+        for i in range(len(tree[start])):
+            if tree[start][i] == 1: #경로가 존재
+
+                if info[i] == 0 and visit[wolf][sheep+1][i] == 0: # 다음 노드가 양
+                    visit[wolf][sheep+1][i] = 1
+                    info[i] = -1
+                    dfs(i, sheep+1, wolf)
+                    # backtracking
+                    info[i] = 0
+                    visit[wolf][sheep+1][i] = 0
+
+                elif info[i] == 1 and visit[wolf+1][sheep][i] == 0: # 다음 노드가 늑대
+                    if wolf+1 < sheep: # 추가조건 만족하면
+                        visit[wolf+1][sheep][i] = 1
+                        info[i] = -1
+                        dfs(i, sheep, wolf+1)
+                        visit[wolf+1][sheep][i] = 0
+                        info[i] = 1
+
+                elif info[i] == -1 and visit[wolf][sheep][i] == 0: # 다음 노드가 비었음(이미 들렸던 노드)
+                    visit[wolf][sheep][i] = 1
+                    dfs(i, sheep, wolf)
+                    visit[wolf][sheep][i] = 0
+                        
+    visit[0][1][0] = 1
+    info[0] = -1
+    dfs(0,1,0)
             
     return answer
